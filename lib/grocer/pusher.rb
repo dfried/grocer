@@ -17,7 +17,7 @@ module Grocer
 	    if !read.nil? && !read.first.nil?
 	      while error = read[0].gets
 	      	e = error.unpack("c1c1N1")
-	      	errors << {identifier: e[2], error_code: e[1]}
+	      	@errors << {identifier: e[2], error_code: e[1]}
 	      	Rails.logger.error "APNS returned error: #{errors.last}."
 	      end
 	    end
