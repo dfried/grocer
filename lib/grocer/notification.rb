@@ -1,5 +1,4 @@
 require 'json'
-require 'grocer/no_payload_error'
 
 module Grocer
   # Public: An object used to send notifications to APNS.
@@ -31,6 +30,7 @@ module Grocer
 
     def to_bytes
       validate_payload
+      payload = encoded_payload
 
       [
         1,
@@ -38,87 +38,36 @@ module Grocer
         expiry_epoch_time,
         device_token_length,
         sanitized_device_token,
-        encoded_payload.bytesize,
-        encoded_payload
+        payload.bytesize,
+        payload
       ].pack('CNNnH64nA*')
     end
 
-    def alert=(alert)
-      @alert = alert
-      @encoded_payload = nil
+    def payload_too_large?
+      encoded_payload.bytesize > MAX_PAYLOAD_SIZE
     end
 
-    def badge=(badge)
-      @badge = badge
-      @encoded_payload = nil
+    def truncate field
+      field_val = send(field)
+      field_size = field_val.bytesize
+      payload_size = encoded_payload.bytesize
+      max_field_size = 256 - (payload_size - field_size)
+      if max_field_size > 0
+        field_val = field_val.truncate(max_field_size)
+        send(field.to_s + "=", field_val)
+      else
+        send(field.to_s + "=", nil)
+      end
     end
 
-    def custom=(custom)
-      @custom = custom
-      @encoded_payload = nil
-    end
+    private
 
-    def sound=(sound)
-      @sound = sound
-      @encoded_payload = nil
-    end
-
-    def category=(category)
-      @category = category
-      @encoded_payload = nil
-    end
-
-    def extra=(extra)
-      @extra = extra
-      @encoded_payload = nil
-    end
-
-    def map=(map)
-      @map = map
-      @encoded_payload = nil
-    end
-
-    def hash=(hash)
-      @hash = hash
-      @encoded_payload = nil
-    end
-
-    def data=(data)
-      @data = data
-      @encoded_payload = nil
-    end
-
-    def type=(type)
-      @type = type
-      @encoded_payload = nil
-    end
-
-    def private_group=(private_group)
-      @private_group = private_group
-      @encoded_payload = nil
-    end
-
-    def group=(group)
-      @group = group
-      @encoded_payload = nil
-    end
-
-    def conversation=(conversation)
-      @conversation = conversation
-      @encoded_payload = nil
-    end
-
-    def content_available=(content_available)
-      @content_available = CONTENT_AVAILABLE_INDICATOR if content_available
-      @encoded_payload = nil
-    end
-
-    def content_available?
-      !!content_available
+    def payload_too_large?
+      encoded_payload.bytesize > MAX_PAYLOAD_SIZE
     end
 
     def validate_payload
-      fail NoPayloadError unless alert || badge || custom
+      fail NoPayloadError unless alert || badge
       fail PayloadTooLargeError if payload_too_large?
       true
     end
@@ -152,8 +101,7 @@ module Grocer
       { aps: aps_hash }
     end
 
-    def payload_too_large?
-      encoded_payload.bytesize > MAX_PAYLOAD_SIZE
+      { aps: aps_hash }.merge(custom || { })
     end
 
     def expiry_epoch_time
@@ -166,6 +114,21 @@ module Grocer
 
     def device_token_length
       32
+    end
+
+    def alert= alert
+      @alert = alert
+      @encoded_payload = nil
+    end
+
+    def badge= badge
+      @badge = badge
+      @encoded_payload = nil
+    end
+
+    def sound= sound
+      @sound = sound
+      @encoded_payload = nil
     end
   end
 end
