@@ -47,13 +47,13 @@ module Grocer
       encoded_payload.bytesize > MAX_PAYLOAD_SIZE
     end
 
-    def truncate field
+    def truncate(field)
       field_val = send(field)
       field_size = field_val.bytesize
       payload_size = encoded_payload.bytesize
-      max_field_size = 256 - (payload_size - field_size)
+      max_field_size = MAX_PAYLOAD_SIZE - (payload_size - field_size)
       if max_field_size > 0
-        field_val = field_val.truncate(max_field_size)
+        field_val = field_val[0..max_field_size]
         send(field.to_s + "=", field_val)
       else
         send(field.to_s + "=", nil)
@@ -77,6 +77,11 @@ module Grocer
     end
 
     private
+
+    def validate_payload
+      fail NoPayloadError unless alert || badge
+      fail PayloadTooLargeError if payload_too_large?
+    end
 
     def encoded_payload
       @encoded_payload ||= JSON.dump(payload_hash)
