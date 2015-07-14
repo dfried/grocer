@@ -7,7 +7,7 @@ module Grocer
     CONTENT_AVAILABLE_INDICATOR = 1
 
     attr_accessor :identifier, :expiry, :device_token
-    attr_reader :alert, :badge, :custom, :sound, :content_available, :category
+    attr_reader :alert, :badge, :custom, :sound, :content_available, :category, :extra, :map, :hash, :data, :type
 
     # Public: Initialize a new Grocer::Notification. You must specify at least an `alert` or `badge`.
     #
@@ -67,6 +67,31 @@ module Grocer
       @encoded_payload = nil
     end
 
+    def extra=(extra)
+      @extra = extra
+      @encoded_payload = nil
+    end
+
+    def map=(map)
+      @map = map
+      @encoded_payload = nil
+    end
+
+    def hash=(hash)
+      @hash = hash
+      @encoded_payload = nil
+    end
+
+    def data=(data)
+      @data = data
+      @encoded_payload = nil
+    end
+
+    def type=(type)
+      @type = type
+      @encoded_payload = nil
+    end
+
     def content_available=(content_available)
       @content_available = CONTENT_AVAILABLE_INDICATOR if content_available
       @encoded_payload = nil
@@ -99,6 +124,11 @@ module Grocer
       aps_hash[:sound] = sound if sound
       aps_hash[:'content-available'] = content_available if content_available?
       aps_hash[:category] = category if category
+      aps_hash[:extra] = extra if extra
+      aps_hash[:map] = map if map
+      aps_hash[:hash] = hash if hash
+      aps_hash[:data] = data if data
+      aps_hash[:type] = type if type
 
       { aps: aps_hash }.merge(custom || { })
     end
