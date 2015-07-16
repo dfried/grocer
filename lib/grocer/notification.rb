@@ -7,7 +7,7 @@ module Grocer
     CONTENT_AVAILABLE_INDICATOR = 1
 
     attr_accessor :identifier, :expiry, :device_token
-    attr_reader :alert, :badge, :custom, :sound, :content_available, :category, :extra, :map, :hash, :data, :type
+    attr_reader :alert, :badge, :custom, :sound, :content_available, :category, :extra, :map, :hash, :data, :type, :private_group, :group, :conversation
 
     # Public: Initialize a new Grocer::Notification. You must specify at least an `alert` or `badge`.
     #
@@ -92,6 +92,21 @@ module Grocer
       @encoded_payload = nil
     end
 
+    def private_group=(private_group)
+      @private_group = private_group
+      @encoded_payload = nil
+    end
+
+    def group=(group)
+      @group = group
+      @encoded_payload = nil
+    end
+
+    def conversation=(conversation)
+      @conversation = conversation
+      @encoded_payload = nil
+    end
+
     def content_available=(content_available)
       @content_available = CONTENT_AVAILABLE_INDICATOR if content_available
       @encoded_payload = nil
@@ -129,8 +144,11 @@ module Grocer
       aps_hash[:hash] = hash if hash
       aps_hash[:data] = data if data
       aps_hash[:type] = type if type
-
-      { aps: aps_hash }.merge(custom || { })
+      aps_hash[:private_group] = private_group if private_group
+      aps_hash[:group] = group if group
+      aps_hash[:conversation] = conversation if conversation
+      aps_hash.merge(custom || {})
+      { aps: aps_hash }
     end
 
     def payload_too_large?
